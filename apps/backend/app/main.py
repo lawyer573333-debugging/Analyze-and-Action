@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 import google.generativeai as genai
 from app.config import settings
-from app.routers import documents, insights, actions, auth, websocket
+from app.routers import documents, insights, auth, websocket
 
 # Configure Gemini
 if settings.GEMINI_API_KEY:
@@ -16,7 +16,7 @@ app = FastAPI(
 # Set all CORS enabled origins
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # TODO: restrict this in production
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

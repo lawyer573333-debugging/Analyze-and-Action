@@ -1,8 +1,8 @@
 import axios from 'axios';
 import { useAuthStore } from '../store/useAuthStore';
 
-// Assuming the backend is running locally on port 8000
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+// Explicitly use 127.0.0.1 to avoid Windows localhost IPv6 resolution bugs
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8000/api/v1';
 
 export const api = axios.create({
   baseURL: API_URL,

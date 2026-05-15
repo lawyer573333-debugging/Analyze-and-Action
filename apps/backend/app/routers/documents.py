@@ -70,7 +70,7 @@ async def list_documents(
     documents = result.scalars().all()
     return documents
 
-@router.delete("/{document_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/{document_id}", status_code=status.HTTP_200_OK)
 async def delete_document(
     document_id: str,
     current_user: User = Depends(get_current_user),
@@ -92,4 +92,4 @@ async def delete_document(
     document.deleted_at = utc_now()
     await db.commit()
     
-    return None
+    return {"status": "deleted"}
