@@ -1,0 +1,16 @@
+node_modules/
+.next/
+dist/
+build/
+**/.env
+**/.env.*
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.coverage
+coverage.xml
+.idea/
+.vscode/
+*.log

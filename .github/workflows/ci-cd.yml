@@ -1,0 +1,90 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: insight-to-action-engine
+  REGION: us-central1
+  GAR_LOCATION: us-central1-docker.pkg.dev/insight-to-action-engine/insight-to-action-backend
+  SERVICE: insight-to-action-api
+
+jobs:
+  test-backend:
+    name: Test FastAPI Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          cd apps/backend
+          pip install -r requirements.txt
+          pip install pytest httpx
+      - name: Run Tests
+        run: |
+          # cd apps/backend && pytest tests/
+
+  test-frontend:
+    name: Test Next.js Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: 'apps/frontend-web/package-lock.json'
+      - name: Install dependencies
+        run: cd apps/frontend-web && npm ci || npm install
+      - name: Build & Lint
+        run: |
+          cd apps/frontend-web
+          npm run build
+
+  deploy-backend:
+    name: Build & Deploy Backend to Cloud Run
+    needs: [test-backend]
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # - id: 'auth'
+      #   name: 'Authenticate to Google Cloud'
+      #   uses: 'google-github-actions/auth@v1'
+      #   with:
+      #     workload_identity_provider: 'projects/123456789/locations/global/workloadIdentityPools/my-pool/providers/my-provider'
+      #     service_account: 'my-service-account@my-project.iam.gserviceaccount.com'
+
+      # - name: Set up Cloud SDK
+      #   uses: google-github-actions/setup-gcloud@v1
+
+      # - name: Docker auth
+      #   run: |-
+      #     gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      # - name: Build and Push Container
+      #   run: |-
+      #     docker build -t "${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}" apps/backend
+      #     docker push "${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}"
+
+      # - name: Deploy to Cloud Run
+      #   id: deploy
+      #   uses: google-github-actions/deploy-cloudrun@v1
+      #   with:
+      #     service: ${{ env.SERVICE }}
+      #     region: ${{ env.REGION }}
+      #     image: ${{ env.GAR_LOCATION }}/${{ env.SERVICE }}:${{ github.sha }}
