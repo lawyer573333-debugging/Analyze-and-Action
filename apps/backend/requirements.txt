@@ -10,7 +10,6 @@ passlib[bcrypt]>=1.7.4
 python-multipart>=0.0.6
 httpx>=0.24.1
 redis>=4.6.0
-google-cloud-aiplatform>=1.30.0
 pymupdf 
 google-generativeai 
 beautifulsoup4

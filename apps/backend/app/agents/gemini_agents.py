@@ -10,13 +10,14 @@ async def extract_insights(document_text: str) -> List[Dict[str, Any]]:
     Agent 1: Extracts operational insights from document text with citations.
     """
     prompt = f"""
-    You are an analytical extraction engine. Your goal is to extract non-trivial, specific operational insights from the following text.
+    You are an elite Enterprise Operations Extraction Engine. Your goal is to extract non-trivial, highly specific operational insights from the following text.
     You must output ONLY a valid JSON array of 'InsightResult' objects.
     
-    Requirements:
-    1. Extract exactly 2-3 key insights.
-    2. For every insight, you MUST quote the exact text in the 'evidence' array.
-    3. Category must be one of: "Risk", "Opportunity", "Inefficiency", "General".
+    CRITICAL INSTRUCTIONS:
+    1. Focus aggressively on bottlenecks, critical compliance risks, or financial/resource leaks. Ignore trivial details.
+    2. Extract exactly 2-3 key insights.
+    3. For EVERY insight, you MUST quote the exact text in the 'evidence' array. If you cannot find exact evidence, do not extract it.
+    4. Category must be strictly one of: "Risk", "Opportunity", "Inefficiency", "Compliance".
     
     Output Schema (List of Objects):
     [{{
@@ -31,7 +32,7 @@ async def extract_insights(document_text: str) -> List[Dict[str, Any]]:
     {document_text}
     """
     
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
     response = model.generate_content(
         prompt,
         generation_config=genai.GenerationConfig(
@@ -70,7 +71,7 @@ async def analyze_impact(insight_dict: dict) -> Dict[str, Any]:
     {json.dumps(insight_dict)}
     """
     
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
     response = model.generate_content(
         prompt,
         generation_config=genai.GenerationConfig(
@@ -92,12 +93,13 @@ async def generate_actions(impact_dict: dict, insight_dict: dict) -> List[Dict[s
     Agent 3: Generates executable actions based on the impact.
     """
     prompt = f"""
-    You are an Action Generation Agent. Based on the insight and its impact, generate exactly 3 ranked executable actions.
+    You are an Enterprise Action Generation Agent. Based on the insight and its quantified impact, generate exactly 3 ranked executable actions.
     You must output ONLY a valid JSON array of 'ActionItem' objects.
     
-    Requirements:
-    1. Rank from 1 to 3.
-    2. Generate parameters required for simulated execution (e.g., webhook_url, delay_ms, message_body).
+    CRITICAL INSTRUCTIONS:
+    1. Rank from 1 (highest priority) to 3.
+    2. Actions MUST be highly specific, operational, and immediately executable by an automated system.
+    3. Generate the precise parameters required for our Simulation Engine to execute this (e.g., webhook_url, delay_ms, Jira_project_key, Slack_channel, email_recipient).
     
     Output Schema:
     [{{

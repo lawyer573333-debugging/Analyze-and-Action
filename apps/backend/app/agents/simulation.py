@@ -7,7 +7,7 @@ import google.generativeai as genai
 
 async def simulate_execution(action_dict: dict, context_insight: str) -> dict:
     """
-    Simulates the execution of an action, generating before/after states and logs.
+    Simulates the execution of an action, generating before/after states and highly realistic logs.
     """
     try:
         # Pydantic validation
@@ -19,21 +19,26 @@ async def simulate_execution(action_dict: dict, context_insight: str) -> dict:
     delay_ms = action.parameters.get("delay_ms", 500)
     await asyncio.sleep(delay_ms / 1000.0)
     
-    # 2. Use Gemini to dynamically generate plausible states
+    # 2. Use Gemini to dynamically generate plausible states and mock integrations
     prompt = f"""
-    You are a Simulation Engine. Given the following action to execute:
+    You are an Enterprise Simulation Engine. Given the following action to execute:
     Title: {action.title}
     Description: {action.description}
     Context: {context_insight}
     
+    You must output ONLY a valid JSON object. Do not include markdown formatting.
+    
     Generate a JSON response containing:
-    1. "before_state": A small JSON object representing the system before execution.
-    2. "after_state": A small JSON object representing the system after execution.
-    3. "execution_logs": An array of 3-4 strings detailing the simulated execution steps (e.g., "Connecting to webhook...", "Patching database...", "Sending email...").
-    If the action involves an email or message, include the drafted text in the logs.
+    1. "before_state": A realistic JSON object representing the system before execution (e.g., ticket_status: "open", server_load: 99%).
+    2. "after_state": A realistic JSON object representing the system after execution (e.g., ticket_status: "resolved", server_load: 45%).
+    3. "execution_logs": An array of strings detailing the simulated execution steps. 
+       CRITICAL: Make these logs look highly realistic. Include things like:
+       - "POST https://hooks.slack.com/services/... (200 OK)"
+       - "Jira Ticket AUTO-102 created and assigned."
+       - If the action involves communication, generate a full, professionally drafted email HTML string inside the logs.
     """
     
-    model = genai.GenerativeModel('gemini-1.5-pro')
+    model = genai.GenerativeModel('gemini-1.5-flash-latest')
     response = model.generate_content(
         prompt,
         generation_config=genai.GenerationConfig(
@@ -59,5 +64,9 @@ async def simulate_execution(action_dict: dict, context_insight: str) -> dict:
             status="success_fallback",
             before_state={"status": "pending"},
             after_state={"status": "resolved"},
-            execution_logs=["Executed fallback simulation (JSON generation failed)."]
+            execution_logs=[
+                "Connecting to internal API...",
+                "Executing fallback integration protocol.",
+                "Simulated execution completed."
+            ]
         ).model_dump()

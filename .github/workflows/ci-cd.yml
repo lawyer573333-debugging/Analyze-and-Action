@@ -42,7 +42,7 @@ jobs:
         with:
           node-version: '18'
           cache: 'npm'
-          cache-dependency-path: 'apps/frontend-web/package-lock.json'
+          cache-dependency-path: 'package-lock.json'
       - name: Install dependencies
         run: cd apps/frontend-web && npm ci || npm install
       - name: Build & Lint
