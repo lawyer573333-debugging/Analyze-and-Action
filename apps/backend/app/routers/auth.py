@@ -30,7 +30,7 @@ async def get_current_user(
             raise credentials_exception
     except JWTError:
         raise credentials_exception
-        
+    
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalars().first()
     if user is None:
@@ -67,21 +67,29 @@ async def login_access_token(
     db: AsyncSession = Depends(get_db),
     form_data: OAuth2PasswordRequestForm = Depends()
 ) -> Any:
-    # MOCKED FOR LOCAL SHOWCASE (No DB required)
+    # Validate credentials against database
+    result = await db.execute(select(User).where(User.email == form_data.username))
+    user = result.scalars().first()
+    
+    if not user or not verify_password(form_data.password, user.password_hash):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid email or password",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User account is inactive"
+        )
+    
     return {
-        "access_token": create_access_token(subject="mock-user-123"),
-        "refresh_token": create_refresh_token(subject="mock-user-123"),
+        "access_token": create_access_token(subject=user.id),
+        "refresh_token": create_refresh_token(subject=user.id),
         "token_type": "bearer",
     }
 
-@router.get("/me")
-async def read_current_user() -> Any:
-    # MOCKED FOR LOCAL SHOWCASE
-    return {
-        "id": "mock-user-123",
-        "email": "demo@antigravity.ai",
-        "first_name": "Demo",
-        "last_name": "User",
-        "is_active": True,
-        "is_superuser": True
-    }
+@router.get("/me", response_model=UserResponse)
+async def read_current_user(current_user: User = Depends(get_current_user)) -> Any:
+    return current_user

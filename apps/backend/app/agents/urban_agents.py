@@ -15,7 +15,8 @@ def get_model(agent_level: int):
     """
     key = settings.GEMINI_API_KEY_SECONDARY if agent_level <= 1 else settings.GEMINI_API_KEY_PRIMARY
     genai.configure(api_key=key)
-    return genai.GenerativeModel('gemini-1.5-pro')
+    # Using gemini-1.5-flash as the most stable free-tier model
+    return genai.GenerativeModel('gemini-2.5-flash')
 
 async def verify_trust(report_text: str) -> Dict[str, Any]:
     """

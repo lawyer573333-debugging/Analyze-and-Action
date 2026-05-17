@@ -1,33 +1,51 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import google.generativeai as genai
-from app.config import settings
-from app.routers import documents, insights, auth, websocket
-
-# Configure Gemini
-if settings.GEMINI_API_KEY:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
+from app.middleware.auth import JWTAuthMiddleware
+from app.middleware.logging import LoggingMiddleware
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.routers import auth, documents, insights, actions, websocket, urban
 
 app = FastAPI(
-    title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/openapi.json"
+    title="Insight-to-Action Engine",
+    version="1.0.0",
+    docs_url="/api/docs"
 )
 
-# Set all CORS enabled origins
+# Middleware stack (order matters - auth BEFORE rate limit)
+app.add_middleware(LoggingMiddleware)
+app.add_middleware(JWTAuthMiddleware)
+app.add_middleware(RateLimitMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "http://localhost:8080",
+        "http://localhost:3001",
+        "http://localhost:5000",
+        "https://AnalyzeAndAction.com",
+        "https://www.AnalyzeAndAction.com",
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
-@app.get("/health")
-def health_check():
-    return {"status": "ok", "service": settings.PROJECT_NAME}
+# Include routers
+app.include_router(auth.router, prefix="/api/auth", tags=["auth"])
+app.include_router(urban.router, prefix="/api/urban", tags=["urban"])
+app.include_router(documents.router, prefix="/api/documents", tags=["documents"])
+app.include_router(insights.router, prefix="/api/insights", tags=["insights"])
+app.include_router(actions.router, prefix="/api/actions", tags=["actions"])
+app.include_router(websocket.router, prefix="/api/ws", tags=["websocket"])
 
-app.include_router(auth.router, prefix=f"{settings.API_V1_STR}/auth", tags=["Auth"])
-app.include_router(documents.router, prefix=f"{settings.API_V1_STR}/documents", tags=["Documents"])
-app.include_router(insights.router, prefix=f"{settings.API_V1_STR}/insights", tags=["Insights"])
-app.include_router(websocket.router, tags=["WebSockets"])
-# app.include_router(actions.router, prefix=f"{settings.API_V1_STR}/actions", tags=["Actions"])
+@app.get("/")
+async def root():
+    return {
+        "message": "Welcome to Antigravity Insight-to-Action Engine",
+        "docs": "/api/docs",
+        "health": "/health"
+    }
+
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}

@@ -1,42 +1,79 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
-class MapVisualization extends StatelessWidget {
+class MapVisualization extends StatefulWidget {
   final bool isReroutingActive;
 
   const MapVisualization({super.key, this.isReroutingActive = false});
 
   @override
+  State<MapVisualization> createState() => _MapVisualizationState();
+}
+
+class _MapVisualizationState extends State<MapVisualization> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      height: 300,
+      height: 320,
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.3),
+        color: const Color(0xFF07111F).withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.3)),
+        border: Border.all(color: const Color(0xFF00D1FF).withValues(alpha: 0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFF00D1FF).withValues(alpha: 0.1),
+            blurRadius: 20,
+            spreadRadius: 2,
+          )
+        ],
       ),
       child: Stack(
         children: [
-          // Simulated Grid/Map Background
+          // Animated Grid Background
           ClipRRect(
             borderRadius: BorderRadius.circular(24),
-            child: CustomPaint(
-              painter: CityMapPainter(isRerouting: isReroutingActive),
-              size: Size.infinite,
+            child: AnimatedBuilder(
+              animation: _controller,
+              builder: (context, child) {
+                return CustomPaint(
+                  painter: CityMapPainter(
+                    isRerouting: widget.isReroutingActive,
+                    pulse: _controller.value,
+                  ),
+                  size: Size.infinite,
+                );
+              },
             ),
           ),
           
-          // Overlay UI
+          // Glass Overlay UI
           Positioned(
             top: 16,
             left: 16,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.6),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: const Color(0xFF3B82F6).withValues(alpha: 0.5)),
+                color: Colors.black.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: const Color(0xFF00D1FF).withValues(alpha: 0.5)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -45,34 +82,41 @@ class MapVisualization extends StatelessWidget {
                     width: 8,
                     height: 8,
                     decoration: const BoxDecoration(
-                      color: Colors.green,
+                      color: Color(0xFF00FF99),
                       shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(color: Color(0xFF00FF99), blurRadius: 8, spreadRadius: 1)]
                     ),
                   ),
                   const SizedBox(width: 8),
                   const Text(
-                    "LIVE CITY PULSE",
-                    style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    "CORE SYSTEM: ACTIVE",
+                    style: TextStyle(color: Color(0xFF00D1FF), fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1),
                   ),
                 ],
               ),
             ),
           ),
 
-          if (isReroutingActive)
+          if (widget.isReroutingActive)
             Positioned(
               bottom: 16,
               right: 16,
               child: Container(
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: Colors.blue.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue),
+                  color: const Color(0xFFFF4D4D).withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFFF4D4D)),
                 ),
-                child: const Text(
-                  "REROUTING ACTIVE",
-                  style: TextStyle(color: Colors.blue, fontSize: 10, fontWeight: FontWeight.bold),
+                child: const Row(
+                  children: [
+                    Icon(Icons.warning_amber_rounded, color: Color(0xFFFF4D4D), size: 14),
+                    SizedBox(width: 6),
+                    Text(
+                      "REROUTING OVERRIDE",
+                      style: TextStyle(color: Color(0xFFFF4D4D), fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -84,48 +128,56 @@ class MapVisualization extends StatelessWidget {
 
 class CityMapPainter extends CustomPainter {
   final bool isRerouting;
-  CityMapPainter({required this.isRerouting});
+  final double pulse;
+  CityMapPainter({required this.isRerouting, required this.pulse});
 
   @override
   void paint(Canvas canvas, Size size) {
     final gridPaint = Paint()
-      ..color = Colors.blue.withValues(alpha: 0.1)
+      ..color = const Color(0xFF00D1FF).withValues(alpha: 0.05)
       ..strokeWidth = 1.0;
 
-    // Draw Grid
-    for (double i = 0; i < size.width; i += 30) {
+    // Moving Grid Effect
+    double offset = pulse * 30;
+    for (double i = offset % 30; i < size.width; i += 30) {
       canvas.drawLine(Offset(i, 0), Offset(i, size.height), gridPaint);
     }
-    for (double i = 0; i < size.height; i += 30) {
+    for (double i = offset % 30; i < size.height; i += 30) {
       canvas.drawLine(Offset(0, i), Offset(size.width, i), gridPaint);
     }
 
-    // Draw "Roads"
+    // Neon Roads
     final roadPaint = Paint()
-      ..color = Colors.white.withValues(alpha: 0.1)
-      ..strokeWidth = 8.0
+      ..color = const Color(0xFF7A5CFF).withValues(alpha: 0.2)
+      ..strokeWidth = 10.0
       ..strokeCap = StrokeCap.round;
 
-    canvas.drawLine(Offset(50, 0), Offset(50, size.height), roadPaint);
-    canvas.drawLine(Offset(size.width - 50, 0), Offset(size.width - 50, size.height), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.2, 0), Offset(size.width * 0.2, size.height), roadPaint);
+    canvas.drawLine(Offset(size.width * 0.8, 0), Offset(size.width * 0.8, size.height), roadPaint);
     canvas.drawLine(Offset(0, size.height / 2), Offset(size.width, size.height / 2), roadPaint);
 
-    // Draw "Traffic"
-    final trafficPaint = Paint()
-      ..color = isRerouting ? Colors.green : Colors.red
-      ..strokeWidth = 4.0;
-    
-    // Animate or static "Congestion"
-    canvas.drawCircle(Offset(size.width / 2, size.height / 2), 15, Paint()..color = Colors.red.withValues(alpha: 0.5));
+    // Congestion Glow
+    final center = Offset(size.width / 2, size.height / 2);
     if (!isRerouting) {
-       canvas.drawLine(Offset(size.width / 2 - 40, size.height / 2), Offset(size.width / 2 + 40, size.height / 2), Paint()..color = Colors.red..strokeWidth = 3);
+      final alertPaint = Paint()
+        ..color = const Color(0xFFFF4D4D).withValues(alpha: 0.3 * (1 - pulse))
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+      canvas.drawCircle(center, 40 * pulse + 10, alertPaint);
+      
+      canvas.drawCircle(center, 8, Paint()..color = const Color(0xFFFF4D4D));
     } else {
-       // Green alternate path
-       final path = Path();
-       path.moveTo(size.width / 2 - 60, size.height / 2 - 40);
-       path.lineTo(size.width / 2, size.height / 2 - 60);
-       path.lineTo(size.width / 2 + 60, size.height / 2 - 40);
-       canvas.drawPath(path, Paint()..color = Colors.green..style = PaintingStyle.stroke..strokeWidth = 3);
+      // Success Path Glow
+      final successPaint = Paint()
+        ..color = const Color(0xFF00FF99).withValues(alpha: 0.4)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 4
+        ..strokeCap = StrokeCap.round;
+      
+      final path = Path();
+      path.moveTo(size.width * 0.2, size.height * 0.8);
+      path.quadraticBezierTo(size.width / 2, size.height * 0.2, size.width * 0.8, size.height * 0.8);
+      
+      canvas.drawPath(path, successPaint);
     }
   }
 

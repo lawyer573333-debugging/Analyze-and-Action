@@ -11,9 +11,10 @@ This plan transforms the current project into a futuristic **Smart City Urban Ma
 ### 1. Backend: Smart City Agentic Pipeline (`apps/backend`)
 We will implement a multi-agent workflow using structured reasoning.
 
-- **Agent 1: Urban Sentinel (Content Understanding):** Extracts signals from traffic reports, news, and sensors.
+- **Agent 0: Trust & Verification (Vulnerability Shield):** [CRITICAL] Analyzes incoming user reports for patterns of spam, logical inconsistencies, or malicious intent (e.g., reporting a fake fire to clear traffic). It cross-references with "Weather" or "Existing Sensors" where possible.
+- **Agent 1: Urban Sentinel (Content Understanding):** Extracts signals from verified reports, news, and sensors.
 - **Agent 2: Insight Engine (Impact Analysis):** Analyzes how weather + accidents + complaints create "Cascading Failures."
-- **Agent 3: City Controller (Action & Simulation):** Generates rerouting plans and triggers mock API calls to emergency services.
+- **Agent 3: City Controller (Action & Simulation):** Generates rerouting plans and triggers mock API calls. Designed to be extensible to your external routing project.
 
 #### [NEW] `apps/backend/app/agents/urban_agents.py`
 - Definition of the three agents and their handoff logic.

@@ -12,24 +12,26 @@ class AuthNotifier extends StateNotifier<bool> {
 
   Future<void> checkToken() async {
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('jwt_token');
-    if (token != null && token.isNotEmpty) {
-      state = true;
-    }
+    final token = prefs.getString('token');
+    state = token != null;
   }
 
   Future<bool> login(String email, String password) async {
-    // Mock login logic - in production this will hit FastAPI /api/v1/auth/login
-    await Future.delayed(const Duration(milliseconds: 800));
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('jwt_token', 'mock_jwt_token_123');
-    state = true;
-    return true;
+    // Mock login logic - in a real app, you would make an API call here.
+    await Future.delayed(const Duration(seconds: 1));
+    
+    if (email.isNotEmpty && password.length >= 6) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('token', 'mock_token');
+      state = true;
+      return true;
+    }
+    return false;
   }
 
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.remove('jwt_token');
+    await prefs.remove('token');
     state = false;
   }
 }

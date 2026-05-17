@@ -27,12 +27,16 @@ environment:
 # dependencies can be manually updated by changing the version numbers below to
 # the latest version available on pub.dev. To see which dependencies have newer
 # versions available, run `flutter pub outdated`.
+
 dependencies:
+
+  google_fonts: ^6.2.1
   flutter:
     sdk: flutter
 
   cupertino_icons: ^1.0.8
   flutter_riverpod: ^2.5.1
+  state_notifier: ^1.0.0
   http: ^1.2.1
   shared_preferences: ^2.2.3
 

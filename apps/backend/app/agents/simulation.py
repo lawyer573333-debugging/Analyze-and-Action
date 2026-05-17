@@ -38,7 +38,7 @@ async def simulate_execution(action_dict: dict, context_insight: str) -> dict:
        - If the action involves communication, generate a full, professionally drafted email HTML string inside the logs.
     """
     
-    model = genai.GenerativeModel('gemini-1.5-flash-latest')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(
         prompt,
         generation_config=genai.GenerationConfig(
